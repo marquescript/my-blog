@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 9 9 11;
+    --foreground: 244 244 245;
+    --muted: 113 113 122;
+    --border: 39 39 42;
+    --surface: 24 24 27;
+    --accent: 52 211 153;
+  }
+
+  * {
+    @apply border-zinc-800;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::selection {
+    @apply bg-emerald-400/20 text-emerald-300;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zinc-950;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-700;
+  }
+}
+
+@layer components {
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  .fade-gradient {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgb(9 9 11) 80%
+    );
+  }
+
+  /* Rehype Pretty Code overrides */
+  [data-rehype-pretty-code-fragment] {
+    @apply relative;
+  }
+
+  [data-rehype-pretty-code-fragment] pre {
+    @apply overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900 py-4 text-sm;
+  }
+
+  [data-rehype-pretty-code-fragment] code {
+    @apply font-mono;
+  }
+
+  [data-rehype-pretty-code-fragment] [data-line] {
+    @apply px-5;
+  }
+
+  [data-rehype-pretty-code-fragment] [data-highlighted-line] {
+    @apply bg-emerald-400/5 border-l-2 border-emerald-400/40;
+  }
+
+  [data-rehype-pretty-code-title] {
+    @apply rounded-t-lg border border-b-0 border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-mono text-zinc-400;
+  }
+
+  [data-rehype-pretty-code-caption] {
+    @apply mt-2 text-center text-xs text-zinc-500;
+  }
+
+  [data-line-numbers] [data-line]::before {
+    counter-increment: line;
+    content: counter(line);
+    @apply mr-6 inline-block w-4 text-right text-zinc-600;
+  }
+}

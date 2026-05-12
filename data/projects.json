@@ -1,0 +1,19 @@
+[
+  {
+    "name": {
+      "pt": "Este Blog",
+      "en": "This Blog"
+    },
+    "description": {
+      "pt": "Portfolio e blog pessoal construído com Next.js 15, Tailwind CSS e MDX. Foco em design minimalista e experiência de leitura.",
+      "en": "Personal portfolio and blog built with Next.js 15, Tailwind CSS and MDX. Focus on minimalist design and reading experience."
+    },
+    "stack": ["Next.js", "TypeScript", "TailwindCSS", "MDX"],
+    "github": "https://github.com/marquescript/my-blog",
+    "url": null,
+    "status": {
+      "pt": "ativo",
+      "en": "active"
+    }
+  }
+]
