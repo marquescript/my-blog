@@ -25,7 +25,7 @@ export const dict = {
     },
     blog: {
       title: 'Blog',
-      description: 'Artigos sobre sistemas distribuídos, Go, arquitetura e engenharia de software.',
+      description: 'Sobre engenharia de software, engenharia de IA e machine learning.',
       empty: 'Nenhum artigo publicado ainda.',
       prev: 'Anterior',
       next: 'Próxima',
@@ -71,7 +71,7 @@ export const dict = {
     },
     blog: {
       title: 'Blog',
-      description: 'Articles about distributed systems, Go, architecture and software engineering.',
+      description: 'About software engineering, AI engineering and machine learning.',
       empty: 'No articles published yet.',
       prev: 'Previous',
       next: 'Next',
