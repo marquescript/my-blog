@@ -1,0 +1,87 @@
+---
+title: "Basic RAG Pipeline"
+description: "Como funciona uma pipeline básica de RAG — dos documentos até a resposta gerada."
+date: "2026-05-21"
+tags: ["rag", "nlp", "ai"]
+part: 3
+published: true
+---
+
+RAG (Retrieval-Augmented Generation) é uma técnica que combina busca de informação com geração de texto. Em vez de depender apenas do conhecimento que o LLM absorveu durante o treinamento, você fornece contexto relevante em tempo real — o modelo responde com base nesse contexto.
+
+Uma pipeline básica de RAG tem duas fases: **indexação** e **consulta**.
+
+## Fase 1: Indexação
+
+É o processo offline de preparar os documentos para busca.
+
+### 1. Carregamento dos documentos
+
+Os documentos são carregados de alguma fonte — PDFs, páginas web, arquivos de texto, banco de dados, etc.
+
+### 2. Chunking
+
+Os documentos são divididos em pedaços menores chamados **chunks**. Isso é necessário porque LLMs têm limite de contexto e porque chunks menores aumentam a precisão da busca — um chunk bem delimitado tende a tratar de um único assunto.
+
+A estratégia de chunking afeta diretamente a qualidade das respostas. Chunks muito grandes trazem ruído; chunks muito pequenos perdem contexto.
+
+### 3. Embedding
+
+Cada chunk é transformado em um vetor numérico (embedding) por um modelo de embedding. Vetores semanticamente próximos ficam próximos no espaço vetorial.
+
+```
+chunk de texto → modelo de embedding → vetor [0.12, -0.34, 0.87, ...]
+```
+
+### 4. Armazenamento na Vector Database
+
+Os vetores são armazenados em uma vector database (Pinecone, Qdrant, Weaviate, pgvector, etc.) junto com o texto original do chunk e seus metadados.
+
+## Fase 2: Consulta
+
+É o processo online que acontece a cada pergunta do usuário.
+
+### 1. Embedding da query
+
+A pergunta do usuário passa pelo mesmo modelo de embedding usado na indexação, gerando um vetor.
+
+### 2. Busca por similaridade
+
+O vetor da query é comparado com os vetores armazenados. Os chunks com maior similaridade (cosine similarity) são retornados — esses são os **top-k chunks**.
+
+### 3. Construção do prompt
+
+Os chunks recuperados são inseridos no prompt junto com a pergunta do usuário:
+
+```
+Contexto:
+[chunk 1]
+[chunk 2]
+[chunk 3]
+
+Pergunta: {query do usuário}
+```
+
+### 4. Geração
+
+O LLM recebe o prompt e gera a resposta baseada no contexto fornecido.
+
+## Fluxo completo
+
+```
+[documentos] → chunking → embedding → vector db
+                                           ↓
+[query] → embedding → busca por similaridade → top-k chunks
+                                           ↓
+                              [chunks + query] → LLM → resposta
+```
+
+## Limitações do RAG básico
+
+- **Qualidade do chunking** — chunks mal definidos degradam toda a pipeline.
+- **Busca puramente semântica** — pode falhar em queries com termos técnicos ou nomes próprios específicos. Por isso pipelines avançadas combinam busca densa (embeddings) com busca esparsa (BM25).
+- **Contexto fragmentado** — chunks recuperados de forma isolada podem perder o fio condutor do documento original.
+
+Essas limitações motivam técnicas mais avançadas como hybrid search, reranking e HyDE, que abordaremos nos próximos artigos.
+
+Exemplos práticos estão disponíveis [neste repositório](https://github.com/marquescript/rag-engineering/tree/main/rag-fundamentals).

@@ -1,0 +1,86 @@
+---
+title: "Tokenização"
+description: "O processo de dividir texto em tokens e os desafios envolvidos."
+date: "2026-05-18"
+tags: ["rag", "nlp", "ai"]
+part: 1
+published: true
+---
+
+Tokenização é o processo de dividir um texto em partes menores chamadas de tokens. É um dos primeiros passos em qualquer pipeline de processamento de linguagem natural.
+
+## Tipos de tokenização
+
+- **Word Tokenization** — divide o texto em palavras individuais
+- **Sentence Tokenization** — divide o texto em sentenças
+- **Character Tokenization** — divide o texto em caracteres individuais
+
+## Desafios
+
+- **Pontuação** — decidir se deve remover ou manter pode impactar diretamente na análise
+- **Diferenças de idioma** — cada língua tem regras próprias de separação e morfologia
+
+## Tokenização de uso geral vs tokenização para LLMs
+
+Existem duas categorias bem distintas de tokenizadores.
+
+**Tokenizadores de uso geral** (como NLTK) seguem regras linguísticas e retornam palavras ou sentenças legíveis. Servem para NLP clássico: análise de frequência, extração de entidades, pré-processamento de texto.
+
+**Tokenizadores para LLMs** (como os do Hugging Face) são acoplados a um modelo específico. Usam algoritmos estatísticos como BPE ou WordPiece para dividir texto em subpalavras — pedaços aprendidos durante o treino do modelo. O resultado final são IDs numéricos, não strings.
+
+```python
+# Uso geral — retorna palavras completas
+nltk.word_tokenize("tokenization")
+# ['tokenization']
+
+# LLM (BERT) — retorna subpalavras + IDs
+bert_tokenizer.tokenize("tokenization")
+# ['token', '##ization']
+
+bert_tokenizer("tokenization")["input_ids"]
+# [101, 19204, 3989, 102]
+```
+
+O `##` indica continuação de palavra. Palavras raras são quebradas em pedaços que o modelo já conhece do treino, evitando tokens desconhecidos.
+
+Cada modelo tem seu próprio tokenizador com vocabulário diferente — não é possível usar o tokenizador do BERT com os pesos do GPT-2, por exemplo.
+
+| | Uso geral | LLMs |
+|---|---|---|
+| Exemplo | NLTK, spaCy | Hugging Face, tiktoken |
+| Algoritmo | regras linguísticas | BPE / WordPiece / SentencePiece |
+| Resultado | strings | IDs numéricos |
+| Portável? | sim | não — cada modelo tem o seu |
+
+## Exemplo com NLTK
+
+Usaremos o seguinte texto:
+
+```
+Machine Learning is a field of artificial intelligence
+that enables computers to learn patterns by data.
+Without being explicitly programmed.
+```
+
+```python
+import nltk
+
+text = (
+    "Machine Learning is a field of artificial intelligence "
+    "that enables computers to learn patterns by data. "
+    "Without being explicitly programmed."
+)
+
+# Word Tokenization
+word_tokens = nltk.word_tokenize(text)
+# ['Machine', 'Learning', 'is', 'a', 'field', 'of',
+#  'artificial', 'intelligence', 'that', 'enables',
+#  'computers', 'to', 'learn', 'patterns', 'by', 'data',
+#  '.', 'Without', 'being', 'explicitly', 'programmed', '.']
+
+# Sentence Tokenization
+sentence_tokens = nltk.sent_tokenize(text)
+# ['Machine Learning is a field of artificial intelligence
+#   that enables computers to learn patterns by data.',
+#  'Without being explicitly programmed.']
+```

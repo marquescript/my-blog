@@ -17,7 +17,7 @@ export const dict = {
       bio: [
         'Engenheiro de software apaixonado por arquitetura de backend, engenharia de inteligência artificial e me aventurando em machine learning.',
         'Aqui escrevo sobre o que estudo, experimento e aprendo no dia a dia — desde arquitetura até otimizações específicas que valem um artigo.',
-        'Atualmente focado em Python, AI/ML e infraestrutura cloud.',
+        'Atualmente focado em engenharia de IA, sistemas escaláveis e infraestrutura cloud.',
       ],
       recentWriting: 'Escrita recente',
       viewAll: 'Ver tudo',
@@ -63,7 +63,7 @@ export const dict = {
       bio: [
         'Software engineer passionate about backend architecture, AI engineering and venturing into machine learning.',
         'Here I write about what I study, experiment with and learn day to day — from architecture to specific optimizations worth an article.',
-        'Currently focused on Python, AI/ML and cloud infrastructure.',
+        'Currently focused on AI engineering, systems scalability and cloud infrastructure.',
       ],
       recentWriting: 'Recent writing',
       viewAll: 'View all',
