@@ -1,0 +1,78 @@
+---
+title: "Retrieval Systems"
+description: "Uma visão geral sobre sistemas de recuperação de informação e como o TF-IDF funciona."
+date: "2026-05-18"
+tags: ["rag", "nlp", "ai"]
+part: 2
+published: true
+---
+
+Retrieval Systems nada mais é do que um sistema que busca e recupera informações relevantes de uma base de dados.
+
+Existem três tipos principais:
+
+- Boolean Retrieval Model
+- Vector Space Model (VSM)
+- Probabilistic Retrieval Model
+
+## Boolean Retrieval Model
+
+O modelo mais simples. Um documento é retornado se satisfaz uma expressão booleana composta por operadores `AND`, `OR` e `NOT`.
+
+Exemplo: a query `"machine AND learning NOT deep"` retorna apenas documentos que contêm "machine" e "learning" mas não contêm "deep".
+
+Limitações:
+- Não há ranking — um documento ou satisfaz a query ou não.
+- Não considera frequência ou importância dos termos.
+- Pouco flexível para linguagem natural.
+
+## Probabilistic Retrieval Model
+
+Modela a relevância como uma probabilidade. Dado um documento `d` e uma query `q`, estima `P(relevante | d, q)` — a probabilidade de `d` ser relevante para `q`.
+
+O modelo mais conhecido dessa família é o **BM25** (Best Match 25), que é uma evolução do TF-IDF com duas melhorias principais:
+
+- **Saturação de frequência** — a contribuição de um termo cresce de forma sublinear, evitando que documentos com muitas repetições dominem o ranking.
+- **Normalização por tamanho** — documentos longos não levam vantagem injusta sobre documentos curtos.
+
+BM25 é hoje o padrão em sistemas de busca esparsa e amplamente usado como retriever em pipelines RAG modernos.
+
+## Vector Space Model (VSM)
+
+TF-IDF é uma versão de VSM. Esse modelo representa documentos e queries como vetores em um espaço multidimensional — cada dimensão corresponde a um termo único dentro do corpus. Sua ideia principal é transformar dados brutos em um formato matematicamente manipulável, permitindo medir similaridades entre documentos e queries.
+
+Alguns conceitos sobre TF-IDF:
+
+- Cada palavra única no corpus representa uma dimensão no espaço vetorial.
+- Tanto os documentos quanto as queries são representados como vetores, onde cada termo é um componente do vetor.
+- A relevância de um documento para uma query é determinada pela similaridade entre os vetores, quase sempre usando cosine similarity.
+
+As fórmulas:
+
+```
+TF(t, d)      = Número de vezes que o termo "t" aparece no documento "d"
+                / Número total de termos no documento "d"
+
+IDF(t)        = log( Número total de documentos
+                     / Número de documentos que contêm o termo "t" )
+
+TF-IDF(t, d)  = TF(t, d) × IDF(t)
+```
+
+### Exemplo
+
+3 documentos, calculando o TF-IDF para a palavra "Machine":
+
+- `"Machine Learning is a fascinating area"` → TF = 1/6
+- `"Machine Learning models are powerful"` → TF = 1/6
+- `"Deep Learning algorithms work well"` → TF = 0/6
+
+IDF: "Machine" aparece em 2 dos 3 documentos → `log(3/2) = 0.176`
+
+```
+documento 1: (1/6) × 0.176 = 0.029
+documento 2: (1/6) × 0.176 = 0.029
+documento 3: 0
+```
+
+Exemplos práticos dos três modelos estão disponíveis [neste repositório](https://github.com/marquescript/rag-engineering/tree/main/system-retriever).

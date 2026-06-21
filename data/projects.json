@@ -1,6 +1,23 @@
 [
   {
     "name": {
+      "pt": "Biblios",
+      "en": "Biblios"
+    },
+    "description": {
+      "pt": "Sistema RAG para livrarias onde usuários podem conversar com o conteúdo de livros via chat.",
+      "en": "RAG system for bookstores where users can chat with book content."
+    },
+    "stack": ["Python", "FastAPI", "PostgreSQL", "RabbitMQ", "Docker", "Traefik", "Langchain", "Docling"],
+    "github": "https://github.com/marquescript/biblios",
+    "url": null,
+    "status": {
+      "pt": "ativo",
+      "en": "active"
+    }
+  },
+  {
+    "name": {
       "pt": "Este Blog",
       "en": "This Blog"
     },
