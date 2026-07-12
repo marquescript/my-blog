@@ -1,0 +1,138 @@
+---
+title: "Como usar transações do MongoDB na camada de service com Unit Of Work."
+description: "Como apliquei o padrão Unit of Work combinado com AsyncLocalStorage para orquestrar transações entre múltiplos repositórios no Node.js."
+date: "2026-12-06"
+tags: ["node.js", "mongodb", "backend", "clean code"]
+published: true
+---
+
+Recentemente, em um projeto onde tenho algumas separações por domínio com submódulos de domínio,
+me deparei com a seguinte situação: um submódulo B faz o `save` do objeto de domínio B, mas precisa atrelar o id desse objeto ao objeto A,
+que foi quem fez a solicitação.
+
+Por se tratar de submódulos dentro do mesmo domínio, uma opção rápida seria chamar a camada de persistência de A diretamente em B, usando a mesma transação.
+Mas eu gosto da ideia de que cada submódulo cuide de suas próprias responsabilidades. Outra opção seria envolver a chamada em um try/catch e expor um
+método que faz a deleção do objeto B caso ocorra algum erro posterior — mas também acho essa abordagem um pouco mais verbosa e frágil.
+
+Foi pesquisando que encontrei um pattern chamado **Unit of Work**, que basicamente é um padrão de projeto que agrupa múltiplas operações de banco de dados 
+em uma única transação.
+
+A partir daí, associei esse padrão ao `AsyncLocalStorage` do Node.js, armazenando a session no contexto da requisição. Com isso, na camada de service,
+podemos agrupar as chamadas que precisam estar em uma única transação dentro de uma função, e cada método, no seu respectivo repositório, busca a session
+diretamente do `AsyncLocalStorage`.
+
+## Por que AsyncLocalStorage?
+ 
+Sem ele, provavelmente precisaríamos passar a session como parâmetro nos métodos de service e repository, vazando tipos e operações de banco de dados
+para uma camada mais próxima do domínio, que não deveria conhecer detalhes de infraestrutura.
+ 
+Com o `AsyncLocalStorage`, apenas envolvemos as chamadas em uma função, e cada método da camada de persistência
+busca a session diretamente do contexto, sem precisar recebê-la explicitamente.
+
+## Código
+ 
+Método responsável pela lógica da transação no MongoDB:
+
+```ts
+async withTransaction<T>(
+  fn: (session: ClientSession) => Promise<T>,
+): Promise<T> {
+  const session = this.client.startSession();
+  try {
+    session.startTransaction();
+    const result = await fn(session);
+    await session.commitTransaction();
+    return result;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+}
+```
+
+Nossa classe do pattern Unit of Work usando AsyncLocalStorage:
+ 
+```ts
+const storage = new AsyncLocalStorage<ClientSession>();
+ 
+@Injectable()
+export class UnitOfWorkService {
+  constructor(private readonly db: DatabaseService) {}
+ 
+  async run<T>(fn: () => Promise<T>): Promise<T> {
+    const existingSession = storage.getStore();
+
+    if (existingSession) {
+      return fn();
+    }
+
+    return this.db.withTransaction(async (session) => {
+      return storage.run(session, fn);
+    });
+  }
+ 
+  static getStore(): ClientSession {
+    const session = storage.getStore();
+    if (!session) throw new Error('No active transaction');
+    return session;
+  }
+}
+```
+
+Método na service englobando as duas chamadas que precisam estar na mesma transação:
+ 
+```ts
+async create(userId: string, data: DTO): Promise<void> {
+  await this.uow.run(async () => {
+    const id = await this.repositoryB.create(data);
+    await this.serviceA.associate(userId, id);
+  });
+}
+```
+
+Obtendo a session do `AsyncLocalStorage` e utilizando na chamada:
+ 
+```ts
+async create(data: Input): Promise<string> {
+  const session = UnitOfWorkService.getStore();
+ 
+  const document = Schema.parse(data);
+  const result = await this.collection.insertOne(document, { session });
+  return result.insertedId.toString();
+}
+```
+
+### Exemplo do fluxo
+ 
+ ```
+ServiceB.create()
+    -> uow.run(fn)
+        -> withTransaction(session)
+            -> storage.run(session, fn)
+                -> repositoryB.create(data)     // getStore() -> pega a session
+                -> serviceA.associate()
+                    -> repositoryA.associate()  // getStore() -> pega a session
+            -> commitTransaction()
+```
+ 
+Esse mesmo raciocínio se aplica independente da profundidade da cadeia. Com 3 níveis, por exemplo, fica assim:
+ 
+```
+uow.run(fn1)                          // RAIZ -> getStore() vazio -> abre transação real
+  -> repositoryA.create()             // nível 1: grava A
+  -> serviceB.doSomething()
+       -> uow.run(fn2)                // getStore() já tem session -> só reaproveita
+            -> repositoryB.create()   // nível 2: grava B
+            -> serviceC.doSomethingElse()
+                 -> uow.run(fn3)      // getStore() já tem session -> só reaproveita
+                      -> repositoryC.create()  // nível 3: ERRO aqui
+ 
+// erro sobe (throw) por fn3 -> fn2 -> fn1
+// só o withTransaction da RAIZ tem try/catch
+// catch -> session.abortTransaction()
+// resultado: A, B e C são desfeitos juntos, nada fica commitado pela metade
+```
+
+Essa abordagem me permitiu ter transações atômicas entre múltiplos repositórios, com cada submódulo cuidando da sua própria camada de persistência.
